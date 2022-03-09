@@ -303,3 +303,6 @@ Jspreadsheet CE is released under the [MIT license]. Contact <contact@jspreadshe
 - [jSuites - JavaScript plugins & Webcomponents](https://jsuites.net)
 - [Jspreadsheet Pro](https://jspreadsheet.com)
 - [LemonadeJS Reactive Library](https://lemonadejs.net)
+
+## Publish Address
+https://registry.npmjs.org/

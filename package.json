@@ -9,6 +9,9 @@
     "author": {
         "name": "YouthInXian"
     },
+    "files": [
+        "dist"
+    ],
     "keywords": [
         "custom",
         "spreadsheet",
