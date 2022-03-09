@@ -183,6 +183,8 @@ if (! jSuites && typeof(require) === 'function') {
             parseTableAutoCellType:false,
             // Disable corner selection
             selectionCopy:true,
+            // Disable quick inserter
+            quickerInserter: true,
             // Merged cells
             mergeCells:{},
             // Create toolbar
@@ -322,6 +324,8 @@ if (! jSuites && typeof(require) === 'function') {
 
         // Global elements
         obj.el = el;
+        obj.leftInsert = null;
+        obj.rightInsert = null;
         obj.corner = null;
         obj.contextMenu = null;
         obj.textarea = null;
@@ -673,6 +677,24 @@ if (! jSuites && typeof(require) === 'function') {
                 obj.corner.style.display = 'none';
             }
 
+            // insertleft button
+            obj.leftInsert = document.createElement('div');
+            obj.leftInsert.id = 'jexcel_leftinserter';
+            obj.leftInsert.className = 'jexcel_inserter';
+
+            // insertright button
+            obj.rightInsert = document.createElement('div');
+            obj.rightInsert.id = 'jexcel_rightinserter';
+            obj.rightInsert.className = 'jexcel_inserter';
+
+            if (
+                obj.options.allowInsertColumn == false ||
+                obj.options.quickerInserter == false
+            ) {
+                obj.leftInsert.style.display = 'none';
+                obj.rightInsert.style.display = 'none';
+            }
+
             // Textarea helper
             obj.textarea = document.createElement('textarea');
             obj.textarea.className = 'jexcel_textarea';
@@ -735,6 +757,8 @@ if (! jSuites && typeof(require) === 'function') {
             obj.content.appendChild(obj.table);
             obj.content.appendChild(obj.corner);
             obj.content.appendChild(obj.textarea);
+            obj.content.appendChild(obj.leftInsert);
+            obj.content.appendChild(obj.rightInsert);
 
             el.appendChild(obj.toolbar);
             el.appendChild(obj.content);
@@ -2850,6 +2874,18 @@ if (! jSuites && typeof(require) === 'function') {
         }
 
         /**
+         * Hide Inserter
+         * 
+         * @return void
+         */
+        obj._hideInserter = function () {
+            obj.leftInsert.style.top = '-2000px';
+            obj.leftInsert.style.left = '-2000px';
+            obj.rightInsert.style.top = '-2000px';
+            obj.rightInsert.style.left = '-2000px';
+        }
+
+        /**
          * Clear table selection
          */
         obj.resetSelection = function(blur) {
@@ -2906,6 +2942,9 @@ if (! jSuites && typeof(require) === 'function') {
             // Hide corner
             obj.corner.style.top = '-2000px';
             obj.corner.style.left = '-2000px';
+
+            // Hide inserter
+            obj._hideInserter();
 
             if (blur == true && previousStatus == 1) {
                 obj.dispatch('onblur', el);
@@ -3106,6 +3145,7 @@ if (! jSuites && typeof(require) === 'function') {
 
             // Find corner cell
             obj.updateCornerPosition();
+            obj.updateInserterPosition();
         }
 
         /**
@@ -3179,6 +3219,86 @@ if (! jSuites && typeof(require) === 'function') {
                             // Persist selected elements
                             obj.selection.push(obj.records[j][i]);
                         }
+                    }
+                }
+            }
+        }
+        /**
+         * Get highted cells bounds
+         * 
+         * @return bounds { width, height }
+         */
+        obj.getHightlightedBounds = function () {
+            let lt = obj.getCellFromCoords(obj.selectedCell[0], obj.selectedCell[1]);
+            let rb = obj.getCellFromCoords(obj.selectedCell[2], obj.selectedCell[3]);
+            
+            let ltRect = lt.getBoundingClientRect();
+            let rbRect = rb.getBoundingClientRect();
+
+            let ltx = ltRect.left;
+            let lty = ltRect.top;
+            let rbx = rbRect.right;
+            let rby = rbRect.bottom;
+
+            return {
+                x: ltx,
+                y: lty,
+                width: rbx - ltx,
+                height: rby - lty
+            };
+        }
+
+        /**
+         * Update Inserter position
+         * 
+         * @return void
+         */
+        obj.updateInserterPosition = function () {
+            // if any selected cells
+            if (!obj.highlighted.length) {
+                obj._hideInserter();
+            } else {
+                // Get last cell
+                var last = obj.highlighted[obj.highlighted.length-1];
+                var lastX = last.getAttribute('data-x');
+                
+                var hightlightBounds = obj.getHightlightedBounds();
+                var contentRect = obj.content.getBoundingClientRect();
+                var x1 = contentRect.left;
+                var y1 = contentRect.top;
+
+                var x2 = hightlightBounds.x;
+                var y2 = hightlightBounds.y;
+                var w2 = hightlightBounds.width;
+                var h2 = hightlightBounds.height;
+
+                var lx = (x2 - x1) + obj.content.scrollLeft - 6;
+                var rx = (x2 - x1) + w2 + obj.content.scrollLeft - 6;
+                var ly = (y2 - y1) + h2 / 2 + obj.content.scrollTop - 6;
+                var ry = (y2 - y1) + h2 / 2 + obj.content.scrollTop - 6;
+
+                // Place the quick inserter in the correct place
+                obj.leftInsert.style.top = ly + 'px';
+                obj.leftInsert.style.left = lx + 'px';
+                obj.rightInsert.style.top = ry + 'px';
+                obj.rightInsert.style.left = rx + 'px';
+                
+                if (obj.options.freezeColumns) {
+                    var width = obj.getFreezeWidth();
+                    // Only check if the last column is not part of the merged cells
+                    if (lastX > obj.options.freezeColumns-1 && x2 - x1 + w2 < width) {
+                        obj.leftInsert.style.display = 'none';
+                        obj.rightInsert.style.display = 'none';
+                    } else {
+                        if (obj.options.quickerInserter == true) {
+                            obj.leftInsert.style.display = '';
+                            obj.rightInsert.style.display = '';
+                        }
+                    }
+                } else {
+                    if (obj.options.quickerInserter == true) {
+                        obj.leftInsert.style.display = '';
+                        obj.rightInsert.style.display = '';
                     }
                 }
             }
@@ -3369,6 +3489,8 @@ if (! jSuites && typeof(require) === 'function') {
 
                 // Update corner position
                 obj.updateCornerPosition();
+                // Update quicker Inserter position
+                obj.updateInserterPosition();
             }
         }
 
@@ -3421,6 +3543,8 @@ if (! jSuites && typeof(require) === 'function') {
 
                 // Update corner position
                 obj.updateCornerPosition();
+                // Update quicker Inserter position
+                obj.updateInserterPosition();
             }
         }
 
@@ -4973,6 +5097,10 @@ if (! jSuites && typeof(require) === 'function') {
             setTimeout(function() {
                 obj.updateCornerPosition();
             },0);
+            // 
+            setTimeout(function () {
+                obj.updateInserterPosition();
+            }, 0);
         }
 
         /**
@@ -6013,6 +6141,7 @@ if (! jSuites && typeof(require) === 'function') {
             }
 
             obj.updateCornerPosition();
+            obj.updateInserterPosition();
 
             return total;
         }
@@ -6083,6 +6212,7 @@ if (! jSuites && typeof(require) === 'function') {
 
             // Update corner position
             obj.updateCornerPosition();
+            obj.updateInserterPosition();
 
             // Events
             obj.dispatch('onchangepage', el, pageNumber, oldPage);
@@ -7234,6 +7364,7 @@ if (! jSuites && typeof(require) === 'function') {
                                     obj.content.scrollTop = obj.content.scrollTop - obj.content.clientHeight;
                                 }
                                 obj.updateCornerPosition();
+                                obj.updateInserterPosition();
                             }
                         } else if (obj.content.scrollTop <= obj.content.clientHeight) {
                             if (obj.loadUp()) {
@@ -7241,6 +7372,7 @@ if (! jSuites && typeof(require) === 'function') {
                                     obj.content.scrollTop = obj.content.scrollTop + obj.content.clientHeight;
                                 }
                                 obj.updateCornerPosition();
+                                obj.updateInserterPosition();
                             }
                         }
 
@@ -7305,6 +7437,7 @@ if (! jSuites && typeof(require) === 'function') {
 
             // Place the corner in the correct place
             obj.updateCornerPosition();
+            obj.updateInserterPosition();
         }
 
         el.addEventListener("DOMMouseScroll", obj.wheelControls);
@@ -7646,6 +7779,10 @@ if (! jSuites && typeof(require) === 'function') {
                 if (jexcel.current.options.editable == true) {
                     jexcel.current.selectedCorner = true;
                 }
+            } else if (e.target.classList.contains('jexcel_inserter')) {
+                if (jexcel.current.options.editable == true) {
+                    jexcel.current.selectedInserter = e.target.id;
+                }
             } else {
                 // Header found
                 if (jexcelTable[1] == 1) {
@@ -7939,6 +8076,24 @@ if (! jSuites && typeof(require) === 'function') {
                         jexcel.current.removeCopySelection();
                     }
                 }
+
+                if (jexcel.current.selectedInserter) {
+                    var isLeftInserter = jexcel.current.selectedInserter === 'jexcel_leftinserter';
+                    var isRightInserter = jexcel.current.selectedInserter === 'jexcel_rightinserter';
+
+                    jexcel.current.selectedInserter = null;
+                    
+                    if (jexcel.current.options.allowInsertColumn == true) {
+                        // insert columns at left
+                        if (isLeftInserter) {
+                            jexcel.current.insertColumn(1, parseInt(jexcel.current.selectedCell[0]), 1);
+                        }
+                        // insert columns at right
+                        if (isRightInserter) {
+                            jexcel.current.insertColumn(1, parseInt(jexcel.current.selectedCell[2]), 0);
+                        }
+                    }
+                }
             }
         }
 
@@ -7979,6 +8134,7 @@ if (! jSuites && typeof(require) === 'function') {
                             jexcel.current.colgroup[jexcel.current.resizing.column].setAttribute('width', tempWidth);
 
                             jexcel.current.updateCornerPosition();
+                            jexcel.current.updateInserterPosition();
                         }
                     } else {
                         var height = e.pageY - jexcel.current.resizing.mousePosition;
@@ -7988,6 +8144,7 @@ if (! jSuites && typeof(require) === 'function') {
                             jexcel.current.rows[jexcel.current.resizing.row].setAttribute('height', tempHeight);
 
                             jexcel.current.updateCornerPosition();
+                            jexcel.current.updateInserterPosition();
                         }
                     }
                 } else if (jexcel.current.dragging) {
