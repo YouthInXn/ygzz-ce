@@ -1,5 +1,5 @@
 /**
- * Jspreadsheet v4.10.1
+ * Based on Jspreadsheet v4.10.1
  *
  * Website: https://bossanova.uk/jspreadsheet/
  * Description: Create amazing web based spreadsheets.

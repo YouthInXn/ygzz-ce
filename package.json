@@ -1,15 +1,16 @@
 {
-    "name": "jspreadsheet-ce",
-    "title": "The Javascript Spreadsheet",
-    "description": "Jspreadsheet is a lightweight, vanilla javascript plugin to create amazing web-based interactive tables and spreadsheets compatible with Excel, Google Spreadsheets and any other spreadsheet software.",
+    "name": "ygzz-jspreadsheet-ce",
+    "title": "The Javascript Spreadsheet for ygzz",
+    "description": "Jspreadsheet NB",
     "repository": {
         "type": "git",
-        "url": "https://github.com/jspreadsheet/ce.git"
+        "url": "https://github.com/YouthInXn/ygzz-ce.git"
     },
     "author": {
-        "name": "Contact <contact@jspreadsheet.com>"
+        "name": "YouthInXian"
     },
     "keywords": [
+        "custom",
         "spreadsheet",
         "online spreadsheet",
         "jspreadsheet",
@@ -24,20 +25,23 @@
         "data-spreadsheet"
     ],
     "dependencies": {
-        "jsuites": "^4.9.29",
-        "@jspreadsheet/formula": "^1.1.0"
+        "@jspreadsheet/formula": "^1.1.0",
+        "jsuites": "^4.9.29"
     },
     "devDependencies": {
         "chai": "^4.3.4",
         "faker": "^5.5.3",
-        "mocha": "^8.4.0"
+        "mocha": "^8.4.0",
+        "webpack": "^5.70.0",
+        "webpack-cli": "^4.9.2"
     },
     "main": "dist/index.js",
-    "version": "4.10.1",
+    "version": "1.0.0",
     "bugs": "https://github.com/jspreadsheet/ce/issues",
     "homepage": "https://github.com/jspreadsheet/ce",
     "download": "https://github.com/jspreadsheet/ce/archive/master.zip",
     "scripts": {
-        "test": "mocha --exit tests/**/*.test.js"
+        "test": "mocha --exit tests/**/*.test.js",
+        "build": "webpack"
     }
 }
